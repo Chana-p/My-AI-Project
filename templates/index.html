@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dovrotAI - מערכת ניהול משימות חכמה</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .chat-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            text-align: left;
+        }
+
+        .message.bot {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .message.user .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input input:focus {
+            border-color: #007bff;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-card, .tasks-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stats-card h3, .tasks-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .task-item {
+            padding: 10px;
+            border-right: 4px solid #007bff;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .task-meta {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .status-pending { border-right-color: #ffc107; }
+        .status-in_progress { border-right-color: #17a2b8; }
+        .status-completed { border-right-color: #28a745; }
+        .status-cancelled { border-right-color: #dc3545; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .quick-actions h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chat-messages {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-robot"></i> dovrotAI</h1>
+            <p>מערכת ניהול משימות חכמה עם בינה מלאכותית</p>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-section">
+                <div class="chat-header">
+                    <h2><i class="fas fa-comments"></i> שיחה עם הסוכן החכם</h2>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-bubble">
+                            שלום! אני הסוכן החכם שלך לניהול משימות. אני יכול לעזור לך להוסיף, לעדכן, למחוק ולצפות במשימות שלך. איך אוכל לעזור לך היום?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i> הסוכן חושב...
+                </div>
+
+                <div class="chat-input">
+                    <div class="input-group">
+                        <input type="text" id="messageInput" placeholder="כתוב כאן את הבקשה שלך..." onkeypress="handleKeyPress(event)">
+                        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="stats-card">
+                    <h3><i class="fas fa-chart-bar"></i> סטטיסטיקות</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-item">
+                            <div class="stat-number" id="totalTasks">0</div>
+                            <div class="stat-label">סה"כ משימות</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="pendingTasks">0</div>
+                            <div class="stat-label">ממתינות</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="inProgressTasks">0</div>
+                            <div class="stat-label">בתהליך</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="completedTasks">0</div>
+                            <div class="stat-label">הושלמו</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3><i class="fas fa-bolt"></i> פעולות מהירות</h3>
+                    <button class="action-btn" onclick="quickAction('הראה לי את כל המשימות שלי')">
+                        <i class="fas fa-list"></i> הצג כל המשימות
+                    </button>
+                    <button class="action-btn" onclick="quickAction('מה המשימות הדחופות שלי?')">
+                        <i class="fas fa-exclamation-triangle"></i> משימות דחופות
+                    </button>
+                    <button class="action-btn" onclick="quickAction('תן לי סטטיסטיקות על המשימות')">
+                        <i class="fas fa-chart-pie"></i> סטטיסטיקות מפורטות
+                    </button>
+                    <button class="action-btn" onclick="quickAction('הוסף משימה חדשה')">
+                        <i class="fas fa-plus"></i> הוסף משימה
+                    </button>
+                </div>
+
+                <div class="tasks-card">
+                    <h3><i class="fas fa-tasks"></i> משימות אחרונות</h3>
+                                        <div id="recentTasks">
+                        <p style="text-align: center; color: #666; padding: 20px;">טוען משימות...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoading = false;
+        
+        // הגדרת כתובת הבסיס של ה-API - תיקון לבעיית window.location.origin
+        function getApiBaseUrl() {
+            // אם אנחנו ב-localhost, השתמש בכתובת המלאה
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return `${window.location.protocol}//${window.location.host}`;
+            }
+            // אחרת, השתמש בכתובת ברירת המחדל
+            return 'http://localhost:5000';
+        }
+        
+        const API_BASE_URL = getApiBaseUrl();
+        
+        // טעינת נתונים ראשונית
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Window location:', window.location);
+            console.log('API Base URL:', API_BASE_URL);
+            loadTasksData();
+        });
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isLoading) {
+                sendMessage();
+            }
+        }
+
+        function quickAction(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            if (isLoading) return;
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // הוספת הודעת המשתמש
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // הצגת מצב טעינה
+            setLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: message })
+                });
+            
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            
+                const data = await response.json();
+                if (data.success) {
+                    addMessage(data.response, 'bot');
+                    // עדכון נתונים אחרי פעולה
+                    setTimeout(loadTasksData, 500);
+                } else {
+                    addMessage(`שגיאה: ${data.error}`, 'bot');
+                }
+            } catch (error) {
+                console.error('שגיאה בשליחת הודעה:', error);
+                addMessage(`שגיאה בתקשורת: ${error.message}`, 'bot');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.textContent = text;
+            
+            messageDiv.appendChild(bubbleDiv);
+            messagesContainer.appendChild(messageDiv);
+            
+            // גלילה למטה
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const loadingDiv = document.getElementById('loading');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (loading) {
+                loadingDiv.classList.add('show');
+                sendBtn.disabled = true;
+            } else {
+                loadingDiv.classList.remove('show');
+                sendBtn.disabled = false;
+            }
+        }
+
+        async function loadTasksData() {
+            try {
+                console.log('טוען נתוני משימות מ:', `${API_BASE_URL}/api/tasks`);
+            
+                const response = await fetch(`${API_BASE_URL}/api/tasks`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // הוספת credentials אם נדרש
+                    credentials: 'same-origin'
+                });
+            
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            
+                const data = await response.json();
+                console.log('נתוני משימות התקבלו:', data);
+            
+                if (data.success) {
+                    updateStats(data.stats);
+                    updateRecentTasks(data.tasks);
+                } else {
+                    throw new Error(data.error || 'שגיאה לא ידועה');
+                }
+            } catch (error) {
+                console.error('שגיאה בטעינת נתונים:', error);
+                showConnectionError();
+            }
+        }
+
+        function showConnectionError() {
+            // הצגת הודעת שגיאה במקום הסטטיסטיקות
+            const statsElements = ['totalTasks', 'pendingTasks', 'inProgressTasks', 'completedTasks'];
+            statsElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = '?';
+                    element.style.color = '#dc3545';
+                }
+            });
+            
+            // הצגת הודעת שגיאה במקום המשימות
+            const container = document.getElementById('recentTasks');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #dc3545; padding: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>שגיאה בחיבור לשרת</p>
+                        <p style="font-size: 12px;">API URL: ${API_BASE_URL}</p>
+                        <button onclick="loadTasksData()" style="margin-top: 10px; padding: 5px 10px;">נסה שוב</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(stats) {
+            console.log('מעדכן סטטיסטיקות:', stats);
+            
+            const elements = {
+                'totalTasks': stats.total || 0,
+                'pendingTasks': stats.pending || 0,
+                'inProgressTasks': stats.in_progress || 0,
+                'completedTasks': stats.completed || 0
+            };
+            
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                    element.style.color = '';
+                } else {
+                    console.warn(`Element with id '${id}' not found`);
+                }
+            });
+        }
+
+        function updateRecentTasks(tasks) {
+            console.log('מעדכן משימות אחרונות:', tasks);
+            const container = document.getElementById('recentTasks');
+            
+            if (!container) {
+                console.error('Container recentTasks not found');
+                return;
+            }
+            
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">אין משימות</p>';
+                return;
+            }
+            
+            // הצגת 5 המשימות האחרונות
+            const recentTasks = tasks.slice(0, 5);
+            
+            container.innerHTML = recentTasks.map(task => `
+                <div class="task-item status-${task.status}">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-meta">
+                        <i class="fas fa-tag"></i> ${getTaskTypeLabel(task.task_type)} |
+                        <i class="fas fa-circle"></i> ${getStatusLabel(task.status)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getTaskTypeLabel(type) {
+            const labels = {
+                'personal': 'אישי',
+                'work': 'עבודה',
+                'urgent': 'דחוף',
+                'project': 'פרויקט'
+            };
+            return labels[type] || type;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': 'ממתין',
+                'in_progress': 'בתהליך',
+                'completed': 'הושלם',
+                'cancelled': 'בוטל'
+            };
+            return labels[status] || status;
+        }
+
+        // רענון נתונים כל 30 שניות
+        setInterval(loadTasksData, 30000);
+        
+        // הוספת פונקציה לבדיקת חיבור
+        window.testConnection = function() {
+            console.log('בודק חיבור...');
+            loadTasksData();
+        };
+    </script>
+</body>
+</html>
