@@ -381,12 +381,11 @@
         
         // הגדרת כתובת הבסיס של ה-API - תיקון לבעיית window.location.origin
         function getApiBaseUrl() {
-            // אם אנחנו ב-localhost, השתמש בכתובת המלאה
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                return `${window.location.protocol}//${window.location.host}`;
-            }
-            // אחרת, השתמש בכתובת ברירת המחדל
-            return 'http://localhost:5000';
+        return `${window.location.protocol}//${window.location.host}`;
+    }
+    // אחרת (בענן), השתמש בכתובת הנוכחית
+    return window.location.origin;
         }
         
         const API_BASE_URL = getApiBaseUrl();
